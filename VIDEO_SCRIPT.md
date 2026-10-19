@@ -1,7 +1,8 @@
 # Demo video script (≤ 3:00)
 0:00–0:20 **Hook.** "AI can explain research data fluently and still be wrong. SparkHolo Coherence Agent doesn't show an AI sentence until the numbers check out." Show the title and the synthetic-only banner.
 0:20–0:50 **Who and why.** Jean-François, Spark AI NLP, Fredericton. Disability-led holographic research needs explanations you can audit. Everything here is synthetic and non-diagnostic.
-0:50–1:30 **The data.** Move the sliders (follow-up alpha gain, shared source). Show the signals, the band-power bars and the metrics table updating.
-1:30–2:10 **Nemotron plus verification.** Click "Generate and verify". Nemotron is called through Nebius Token Factory, and the claim-by-claim ✅ table appears. The narrative appears only after every claim passes.
-2:10–2:40 **Tamper test.** Tick "inject a false AI claim" and run again. Show the ❌ row, the "Explanation REFUSED" message and the withheld narrative.
+0:50–1:10 **The data.** Point at the pipeline line: Observer → Calibrator → Residual-Latch → Verifier → Archive. Move the sliders (follow-up alpha gain, shared source). Show the signals, the band-power bars and the tagged metrics table ([SYNTHETIC]) updating.
+1:10–1:40 **Residual-Latch.** "Before any AI is asked, Spark's OES-32 residual latch checks every 32-sample block against the baseline." Pick "Baseline drift" in the sidebar: the red **LATCHED: AI not consulted** banner and the table of fired blocks appear. Click "Generate and verify": still latched, no AI call. Switch back to "No artifact": latch clean.
+1:40–2:15 **Nemotron plus verification.** Click "Generate and verify". Nemotron is called through Nebius Token Factory, and the claim-by-claim ✅ table appears. The narrative appears only after every claim passes. Show the 🧾 evidence record hash and the download button.
+2:15–2:40 **Tamper test.** Tick "inject a false AI claim" and run again. Show the ❌ row, the "Explanation REFUSED" message and the withheld narrative.
 2:40–3:00 **Close.** Open source (Apache-2.0), repo link, demo link. The accountability goal sentence. Thanks to NVIDIA, Nebius and the organizers.

@@ -1,15 +1,21 @@
 # ✨ SparkHolo Coherence Agent
 
-Accountable AI explanations for **synthetic** holographic and neural-coherence research signals. NVIDIA Nemotron (via Nebius Token Factory) explains the metrics, and an independent verifier re-computes every claim before anything is displayed.
+Accountable AI explanations for **synthetic** holographic and neural-coherence research signals. A Spark AI NLP **OES-32 residual latch** checks the signals *before* any AI is consulted; NVIDIA Nemotron (via Nebius Token Factory) then explains the metrics, an independent verifier re-computes every claim before anything is displayed, and every run is archived as a hashed evidence record.
+
+**Pipeline:** `Observer → Calibrator → Residual-Latch → Verifier → Archive`
 
 > **Boundaries:** synthetic data only · non-diagnostic research prototype · not a medical device · no health, therapeutic or clinical claims.
 
 ## How it works
-1. `sparkholo/signals.py` generates seeded synthetic multi-channel signals for a baseline and a follow-up session.
-2. It computes Welch relative band power (delta, theta, alpha, beta, gamma), the dominant band and mean alpha coherence.
-3. `sparkholo/nemotron.py` sends the metrics to Nemotron, which must reply with JSON: `{"narrative": ..., "claims": [...]}`.
-4. `sparkholo/verify.py` re-computes each claim (tolerance 0.02 on relative power, 0.03 on coherence). It checks that every number in the narrative is backed by a verified claim and blocks clinical wording. **Any failure withholds the narrative** (fail-closed).
-5. `app.py` (Streamlit) shows the signals, metrics, the claim-by-claim verification table, and the narrative only if it passed.
+1. **Observer.** `sparkholo/signals.py` generates seeded synthetic multi-channel signals for a baseline and a follow-up session (seed 42 by default). A sidebar control can inject a demo artifact into the follow-up: electrode-pop spike, baseline drift, or NaN dropout.
+2. **Calibrator.** `sparkholo/latch.py` splits each channel into 32-sample blocks. The reference `x_ref` is the baseline session's per-channel **block template** (the sample-by-sample mean of all baseline blocks). The normalisation scale is `margin × max|x − x_ref|` over the baseline (margin 3.0, TARGET).
+3. **Residual-Latch** (Spark AI NLP's OES residual contract, OES-32). For every block: `R = max|x − x_ref|`, and on the normalised residual `S = 0.45·Peak + 0.35·RMS + 0.20·MeanAbs`. A block latches when `S ≥ τ` (τ = 0.50, TARGET). **Fail-closed:** NaN, inf, a wrong shape, a failed calibration or any latched block stops the run; Nemotron is **never called** and the UI shows **LATCHED: AI not consulted** with the blocks that fired.
+4. **Verifier.** Only on a clean latch: Welch relative band power (delta…gamma), dominant band and mean alpha coherence are computed; `sparkholo/nemotron.py` sends them to Nemotron, which must reply with JSON `{"narrative": ..., "claims": [...]}`; `sparkholo/verify.py` re-computes each claim (tolerance 0.02 on relative power, 0.03 on coherence, both TARGET), checks that every number in the narrative is backed by a verified claim and blocks clinical wording. **Any failure withholds the narrative.**
+5. **Archive.** `sparkholo/evidence.py` writes a JSON evidence record per run (download button in the app): config, seed, code version (package version + git sha), tagged metrics, latch result, raw AI output, verdict, a SHA-256 per section and one over the whole record. `verify_manifest()` re-checks every hash. No wall-clock time is stored, so identical inputs give an identical hash.
+
+**Evidence tags.** Every number in the UI and in the record carries a tag: `SYNTHETIC` (computed from seeded synthetic signals: all metrics, R and S), `TARGET` (configured thresholds and tolerances: τ, margin, block size, weights, verifier tolerances), `REPORTED` (measured on real data: none in this app), `UNRUN` (not run).
+
+**What the latch means.** It is a data-integrity stop bit: the follow-up left the envelope calibrated on the baseline. It is not a measure of any person or brain state. With the default controls the run is clean (max S 0.29, SYNTHETIC); the injected spike, drift and dropout latch. Extreme settings (noise 0, or both follow-up gains near 3) can also latch clean synthetic data, which is the intended fail-closed behaviour.
 
 ## Setup
 ```bash
@@ -21,26 +27,31 @@ pip install -r requirements.txt
 ## Run
 ```bash
 export NEBIUS_API_KEY=...            # from Nebius Token Factory; never commit it
-export NEMOTRON_MODEL=...            # exact Nemotron model id from Token Factory
-# optional: export NEBIUS_BASE_URL=https://api.tokenfactory.nebius.com/v1/
+# optional overrides (defaults shown):
+# export NEMOTRON_MODEL=nvidia/nemotron-3-super-120b-a12b
+# export NEBIUS_BASE_URL=https://api.tokenfactory.nebius.com/v1/
+#   (the Nemotron 3 Super model card uses https://api.tokenfactory.us-central1.nebius.com/v1/)
 streamlit run app.py
 ```
 Without `NEBIUS_API_KEY`, the app runs a clearly labelled **offline template** explainer so it still demos end to end.
 
 ## Nebius Token Factory and Nemotron
 - Token Factory exposes an OpenAI-compatible API, so the client is the standard `openai` package with `base_url` set.
-- The model id and base URL are configurable through environment variables. Check both against your Token Factory dashboard.
+- Default model `nvidia/nemotron-3-super-120b-a12b` (confirm it appears in `GET /v1/models` for your key); both the model id and base URL can be overridden with environment variables.
 - Reasoning traces (`<think>…</think>`) are stripped. Non-JSON output is refused.
 
 ## Tests
 ```bash
 pip install pytest && pytest -q
 ```
-28 tests: 26 cover determinism, band maths, refusal of tampered, unbacked, malformed and clinically worded explanations, and JSON parsing; 2 Streamlit `AppTest` smoke tests load `app.py` offline, click **Generate and verify explanation**, and check that the tamper checkbox yields **Explanation REFUSED**. GitHub Actions runs them on Python 3.10–3.13. No API key is needed for the tests.
+78 tests, offline, no API key: signal determinism and band maths; verifier refusal of tampered, unbacked, malformed and clinically worded explanations; the residual latch (clean passes, spike and drift latch, NaN/inf/wrong shape/bad baseline latch, the S formula); the pipeline (a latched run never calls the explainer, checked with a mock, in offline and live mode); evidence tags on every number in the record; deterministic manifest hashes and tamper detection by `verify_manifest`; and Streamlit `AppTest` smoke tests (app loads, button verifies, tamper checkbox yields **Explanation REFUSED**, each injected artifact yields **LATCHED: AI not consulted**). GitHub Actions runs them on Python 3.10–3.13.
 
 ## Deploy (Render)
-`render.yaml` is included. Create a Render Web Service from the repo and set `NEBIUS_API_KEY` and `NEMOTRON_MODEL` as secret environment variables. Start command:
+`render.yaml` is included. Create a Render Web Service from the repo and set `NEBIUS_API_KEY` as a secret environment variable (optionally `NEMOTRON_MODEL` / `NEBIUS_BASE_URL`). Start command:
 `streamlit run app.py --server.port $PORT --server.address 0.0.0.0`
+
+## Credits
+The residual-latch stage implements Spark AI NLP's OES residual contract (OES-32 blocks, Peak/RMS/MeanAbs score, fail-closed latch).
 
 ## Licence
 Apache-2.0. See `LICENSE`. © 2026 Jean-François Brisson / Spark AI NLP.
