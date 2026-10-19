@@ -1,11 +1,23 @@
+# Render Blueprint: one free web service running the Streamlit app.
+# Render sets $PORT; the app binds 0.0.0.0:$PORT. Streamlit serves its own health route at /_stcore/health.
+# Without NEBIUS_API_KEY the app still runs, with the clearly labelled OFFLINE template explainer.
 services:
   - type: web
     name: sparkholo-coherence-agent
     runtime: python
+    plan: free
+    region: oregon
+    branch: main
     buildCommand: pip install -r requirements.txt
-    startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true --browser.gatherUsageStats false
+    healthCheckPath: /_stcore/health
+    autoDeployTrigger: commit
     envVars:
-      - key: NEBIUS_API_KEY
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: NEBIUS_API_KEY  # secret: Render prompts for it on first Blueprint sync; never commit it
         sync: false
-      - key: NEMOTRON_MODEL
+      - key: NEMOTRON_MODEL  # optional; default nvidia/nemotron-3-super-120b-a12b
+        sync: false
+      - key: NEBIUS_BASE_URL  # optional; default https://api.tokenfactory.nebius.com/v1/
         sync: false

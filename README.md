@@ -47,8 +47,18 @@ pip install pytest && pytest -q
 89 tests, offline, no API key: signal determinism and band maths; verifier refusal of tampered, unbacked, malformed and clinically worded explanations; the residual latch (clean passes, spike and drift latch, NaN/inf/wrong shape/bad baseline latch, the S formula); the pipeline (a latched run never calls the explainer, checked with a mock, in offline and live mode); evidence tags on every number in the record; deterministic manifest hashes and tamper detection by `verify_manifest`; explainer failures (missing key, HTTP 429 rate limit, rejected key, timeout) fail closed with a clear message that never contains the key; and Streamlit `AppTest` smoke tests (app loads, a rate-limited live call shows a message instead of crashing, button verifies, tamper checkbox yields **Explanation REFUSED**, each injected artifact yields **LATCHED: AI not consulted**). GitHub Actions runs them on Python 3.10–3.13.
 
 ## Deploy (Render)
-`render.yaml` is included. Create a Render Web Service from the repo and set `NEBIUS_API_KEY` as a secret environment variable (optionally `NEMOTRON_MODEL` / `NEBIUS_BASE_URL`). Start command:
-`streamlit run app.py --server.port $PORT --server.address 0.0.0.0`
+`render.yaml` is a Render Blueprint for one free web service. In Render choose **New > Blueprint**, pick this repo, and enter `NEBIUS_API_KEY` when prompted (leave `NEMOTRON_MODEL` and `NEBIUS_BASE_URL` empty to use the defaults). The same settings for a manual **New > Web Service**:
+
+| Setting | Value |
+|---|---|
+| Runtime | Python 3 (`PYTHON_VERSION=3.13.5`) |
+| Build command | `pip install -r requirements.txt` |
+| Start command | `streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true --browser.gatherUsageStats false` |
+| Health check path | `/_stcore/health` |
+| Secret env var | `NEBIUS_API_KEY` |
+| Optional env vars | `NEMOTRON_MODEL`, `NEBIUS_BASE_URL` |
+
+Without the key the app runs the labelled offline template. If Token Factory rate-limits or rejects a call, the app shows a plain message and withholds the explanation (fail-closed). Free Render services sleep after about 15 minutes idle, so the first visit can take a minute.
 
 ## Credits
 The residual-latch stage implements Spark AI NLP's OES residual contract (OES-32 blocks, Peak/RMS/MeanAbs score, fail-closed latch).
