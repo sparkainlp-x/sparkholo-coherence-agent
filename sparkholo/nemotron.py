@@ -60,6 +60,36 @@ def explain_with_raw(metrics: dict, timeout: float = 60.0) -> tuple[dict, str]:
     return _extract_json(raw), raw
 
 
+def describe_error(exc: BaseException) -> str:
+    """Plain-language, key-free message for an explainer failure (shown in the UI and the evidence record).
+
+    API error bodies are not echoed, because some providers include part of the key in them.
+    """
+    try:
+        import openai
+    except ImportError:  # pragma: no cover - openai is a hard requirement
+        openai = None
+    if openai is not None:
+        if isinstance(exc, openai.RateLimitError):
+            return ("Nebius Token Factory rate limit reached (HTTP 429). Wait a minute and try again; "
+                    "nothing was displayed.")
+        if isinstance(exc, (openai.AuthenticationError, openai.PermissionDeniedError)):
+            return f"Nebius API key was rejected (HTTP {exc.status_code}). Check NEBIUS_API_KEY."
+        if isinstance(exc, openai.NotFoundError):
+            return "Model or endpoint not found (HTTP 404). Check NEMOTRON_MODEL and NEBIUS_BASE_URL."
+        if isinstance(exc, openai.APITimeoutError):
+            return "Nebius Token Factory did not answer in time. Try again."
+        if isinstance(exc, openai.APIConnectionError):
+            return "Could not reach Nebius Token Factory. Check the network and NEBIUS_BASE_URL."
+        if isinstance(exc, openai.APIStatusError):
+            return f"Nebius Token Factory returned HTTP {exc.status_code}. Try again later."
+    msg = f"{type(exc).__name__}: {exc}"
+    key = os.environ.get("NEBIUS_API_KEY")
+    if key and len(key) >= 8:
+        msg = msg.replace(key, "[redacted]")
+    return msg[:300]
+
+
 def explain(metrics: dict, timeout: float = 60.0) -> dict:
     """Ask Nemotron for a structured explanation. Raises on any failure (fail-closed)."""
     return explain_with_raw(metrics, timeout)[0]

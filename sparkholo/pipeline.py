@@ -122,7 +122,7 @@ def explain_and_verify(prep: Prepared, *, live: bool = False, explainer: Explain
                 exp = nemotron.offline_explain(prep.metrics, tamper=True)
                 raw = json.dumps(exp, sort_keys=True)
         except Exception as exc:  # noqa: BLE001 - fail closed: nothing is displayed
-            res = RunResult(prep, "EXPLAINER_ERROR", True, mode, error=f"{type(exc).__name__}: {exc}")
+            res = RunResult(prep, "EXPLAINER_ERROR", True, mode, error=nemotron.describe_error(exc))
         else:
             verdict = verify(exp, prep.metrics)
             res = RunResult(prep, "VERIFIED" if verdict.ok else "REFUSED", True, mode, exp, raw, verdict)
