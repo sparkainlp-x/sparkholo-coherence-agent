@@ -1,4 +1,4 @@
-# ✨ SparkHolo Coherence Agent
+# SparkHolo Coherence Agent
 
 Accountable AI explanations for **synthetic** holographic and neural-coherence research signals. A Spark AI NLP **OES-32 residual latch** checks the signals *before* any AI is consulted; NVIDIA Nemotron (via Nebius Token Factory) then explains the metrics, an independent verifier re-computes every claim before anything is displayed, and every run is archived as a hashed evidence record.
 

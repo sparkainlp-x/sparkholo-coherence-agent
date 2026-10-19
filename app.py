@@ -16,8 +16,8 @@ from sparkholo.signals import BANDS
 from sparkholo.verify import COH_TOL, REL_TOL
 
 S, T = "SYNTHETIC", "TARGET"
-st.set_page_config(page_title="SparkHolo Coherence Agent", page_icon="✨", layout="wide")
-st.title("✨ SparkHolo Coherence Agent")
+st.set_page_config(page_title="SparkHolo Coherence Agent", layout="wide")
+st.title("SparkHolo Coherence Agent")
 st.warning(BOUNDARY + " AI text is shown only after a clean residual latch and independent numerical verification.")
 st.markdown("**Pipeline:** " + " → ".join(f"`{p}`" for p in PIPELINE))
 st.caption("Every number carries an evidence tag: SYNTHETIC (computed from seeded synthetic signals), "
@@ -31,7 +31,7 @@ with st.sidebar:
     st.subheader("Follow-up session vs baseline")
     alpha_f = st.slider("Follow-up alpha gain (SYNTHETIC)", 0.0, 3.0, 1.5, 0.1)
     theta_f = st.slider("Follow-up theta gain (SYNTHETIC)", 0.0, 3.0, 1.0, 0.1)
-    st.subheader("🔒 Residual-Latch demo")
+    st.subheader("Residual-Latch demo")
     artifact = st.selectbox("Inject artifact / drift into follow-up", list(ARTIFACTS),
                             format_func=lambda k: ARTIFACTS[k])
     live = bool(os.environ.get("NEBIUS_API_KEY"))
@@ -73,7 +73,7 @@ st.markdown(
     f"Blocks evaluated {fmt(lat.n_blocks, S)}, max R {fmt(lat.max_R, S)}, max S {fmt(lat.max_S, S)}."
 )
 if lat.latched:
-    st.error(f"🔒 LATCHED: AI not consulted ({lat.reason}). {lat.detail}")
+    st.error(f"LATCHED: AI not consulted ({lat.reason}). {lat.detail}")
     st.table(pd.DataFrame([{"session": h.session, "channel": h.channel + 1, "block": h.block,
                             "t start": fmt(h.t_start_s, S, 3), "R": fmt(h.R, S), "S": fmt(h.S, S),
                             "reason": h.reason} for h in lat.fired[:25]]
@@ -81,7 +81,7 @@ if lat.latched:
     if len(lat.fired) > 25:
         st.caption(f"…and {len(lat.fired) - 25} more fired blocks (all in the evidence record).")
 else:
-    st.success(f"🔒 Residual-Latch clean: all blocks below tau {fmt(cfg.tau, T, 2)}.")
+    st.success(f"Residual-Latch clean: all blocks below tau {fmt(cfg.tau, T, 2)}.")
     m = prep.metrics
     st.subheader("Relative band power")
     fig = go.Figure()
@@ -94,7 +94,7 @@ else:
                                    "alpha coherence": fmt(v["alpha_coherence"], S)} for s, v in m.items()}).astype(str),
                  use_container_width=True)
 
-st.header("🧠 AI explanation, verified before display")
+st.header("AI explanation, verified before display")
 st.caption(f"Verifier tolerances: relative power ±{fmt(REL_TOL, T, 2)}, coherence ±{fmt(COH_TOL, T, 2)}.")
 key = json.dumps(cfg.__dict__, sort_keys=True)
 if st.button("Generate and verify explanation", type="primary"):
@@ -111,9 +111,9 @@ if res is not None:
         st.error(f"Explainer unavailable; nothing displayed (fail-closed): {res.error}")
     else:
         v = res.verdict
-        rows = [{"claim": str(r.claim), "verified": "✅" if r.ok else "❌", "detail": f"{r.reason} [SYNTHETIC]"}
+        rows = [{"claim": str(r.claim), "verified": "PASS" if r.ok else "FAIL", "detail": f"{r.reason} [SYNTHETIC]"}
                 for r in v.results]
-        st.table(pd.DataFrame(rows or [{"claim": "(none)", "verified": "❌", "detail": "no claims"}]))
+        st.table(pd.DataFrame(rows or [{"claim": "(none)", "verified": "FAIL", "detail": "no claims"}]))
         if v.ok:
             st.success("All claims independently verified against computed metrics.")
             st.write(res.explanation["narrative"])
@@ -122,7 +122,7 @@ if res is not None:
             st.error("Explanation REFUSED. The narrative is withheld because:")
             for p in v.problems:
                 st.write("• " + p)
-    st.subheader("🧾 Evidence record")
+    st.subheader("Evidence record")
     st.caption(f"manifest SHA-256: `{res.manifest['manifest_sha256']}` · code {res.manifest['code_version']}")
     st.download_button("Download evidence record (JSON)", json.dumps(res.manifest, indent=2, sort_keys=True),
                        file_name=f"sparkholo-evidence-{res.manifest['manifest_sha256'][:12]}.json",
