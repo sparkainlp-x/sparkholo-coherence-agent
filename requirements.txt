@@ -1,5 +1,5 @@
 numpy>=2.0
-scipy>=1.13
+scipy>=1.18.1
 pandas>=2.1
 plotly>=5.18
 streamlit>=1.36
