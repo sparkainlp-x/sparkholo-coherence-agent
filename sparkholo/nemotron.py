@@ -11,10 +11,10 @@ import json
 import os
 import re
 
-# Token Factory OpenAI-compatible endpoint (docs.tokenfactory.nebius.com/switch). The Nemotron 3 Super
-# model card uses the regional endpoint https://api.tokenfactory.us-central1.nebius.com/v1/ ;
-# set NEBIUS_BASE_URL to that if needed.
-DEFAULT_BASE_URL = "https://api.tokenfactory.nebius.com/v1/"
+# Token Factory OpenAI-compatible endpoint. The Token Factory model catalog lists Nemotron 3 Super in the
+# us-central1 region, and Nebius's Nemotron quickstart uses this regional endpoint. The global endpoint
+# https://api.tokenfactory.nebius.com/v1/ serves EU-region models; set NEBIUS_BASE_URL to override.
+DEFAULT_BASE_URL = "https://api.tokenfactory.us-central1.nebius.com/v1/"
 DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b"  # from Nebius docs; confirm against /v1/models
 
 SYSTEM = (

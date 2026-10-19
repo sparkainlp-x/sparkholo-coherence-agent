@@ -29,8 +29,8 @@ pip install -r requirements.txt
 export NEBIUS_API_KEY=...            # from Nebius Token Factory; never commit it
 # optional overrides (defaults shown):
 # export NEMOTRON_MODEL=nvidia/nemotron-3-super-120b-a12b
-# export NEBIUS_BASE_URL=https://api.tokenfactory.nebius.com/v1/
-#   (the Nemotron 3 Super model card uses https://api.tokenfactory.us-central1.nebius.com/v1/)
+# export NEBIUS_BASE_URL=https://api.tokenfactory.us-central1.nebius.com/v1/
+#   (the region where the Token Factory catalog lists Nemotron 3 Super; EU models use https://api.tokenfactory.nebius.com/v1/)
 streamlit run app.py
 ```
 Without `NEBIUS_API_KEY`, the app runs a clearly labelled **offline template** explainer so it still demos end to end.

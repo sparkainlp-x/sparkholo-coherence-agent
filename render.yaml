@@ -19,5 +19,5 @@ services:
         sync: false
       - key: NEMOTRON_MODEL  # optional; default nvidia/nemotron-3-super-120b-a12b
         sync: false
-      - key: NEBIUS_BASE_URL  # optional; default https://api.tokenfactory.nebius.com/v1/
+      - key: NEBIUS_BASE_URL  # optional; default https://api.tokenfactory.us-central1.nebius.com/v1/
         sync: false
