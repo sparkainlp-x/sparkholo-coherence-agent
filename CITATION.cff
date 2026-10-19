@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+title: "SparkHolo Coherence Agent"
+type: software
+authors:
+  - family-names: "Brisson"
+    given-names: "Jean-François"
+    affiliation: "Spark AI NLP"
+    orcid: "https://orcid.org/0009-0000-9778-5374"
+version: "0.1.0"
+license: Apache-2.0
+repository-code: "https://github.com/sparkainlp-x/sparkholo-coherence-agent"
+url: "https://sparkainlpx.xyz"
+abstract: >-
+  Streamlit research prototype that generates seeded synthetic multi-channel
+  signals, computes Welch relative band power, dominant band and mean alpha
+  coherence, asks NVIDIA Nemotron (via Nebius Token Factory) for a structured
+  explanation, and independently re-computes every claim before display. Any
+  failed, unbacked, malformed or clinically worded explanation is withheld
+  (fail-closed). Synthetic data only; non-diagnostic; not a medical device; no
+  health, therapeutic or clinical claims.
+keywords:
+  - nvidia
+  - nemotron
+  - nebius
+  - streamlit
+  - accountable-ai
+  - synthetic-data
+  - open-science
