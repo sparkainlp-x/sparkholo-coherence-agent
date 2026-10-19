@@ -2,8 +2,8 @@
 
 Env vars (never hard-code the key):
   NEBIUS_API_KEY   required for live mode
-  NEBIUS_BASE_URL  default below; confirm in your Token Factory dashboard
-  NEMOTRON_MODEL   exact model id as listed in Token Factory
+  NEBIUS_BASE_URL  default below (Nebius Token Factory, OpenAI-compatible)
+  NEMOTRON_MODEL   model id; confirm it is listed by GET {NEBIUS_BASE_URL}models
 """
 from __future__ import annotations
 
@@ -11,8 +11,11 @@ import json
 import os
 import re
 
-DEFAULT_BASE_URL = "https://api.tokenfactory.nebius.com/v1/"   # FOUNDER: confirm
-DEFAULT_MODEL = "nvidia/Llama-3_3-Nemotron-Super-49B-v1_5"      # FOUNDER: confirm id
+# Token Factory OpenAI-compatible endpoint (docs.tokenfactory.nebius.com/switch). The Nemotron 3 Super
+# model card uses the regional endpoint https://api.tokenfactory.us-central1.nebius.com/v1/ ;
+# set NEBIUS_BASE_URL to that if needed.
+DEFAULT_BASE_URL = "https://api.tokenfactory.nebius.com/v1/"
+DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b"  # from Nebius docs; confirm against /v1/models
 
 SYSTEM = (
     "You explain SYNTHETIC research signals. Never give medical, diagnostic or therapeutic "
@@ -34,18 +37,18 @@ def _extract_json(text: str) -> dict:
     return json.loads(text[start : end + 1])
 
 
-def explain(metrics: dict, timeout: float = 60.0) -> dict:
-    """Ask Nemotron for a structured explanation. Raises on any failure (fail-closed)."""
+def explain_with_raw(metrics: dict, timeout: float = 60.0) -> tuple[dict, str]:
+    """Ask Nemotron for a structured explanation; return (parsed, raw text). Raises on any failure (fail-closed)."""
     from openai import OpenAI
 
     key = os.environ.get("NEBIUS_API_KEY")
     if not key:
         raise RuntimeError("NEBIUS_API_KEY is not set")
     client = OpenAI(
-        base_url=os.environ.get("NEBIUS_BASE_URL", DEFAULT_BASE_URL), api_key=key, timeout=timeout
+        base_url=os.environ.get("NEBIUS_BASE_URL") or DEFAULT_BASE_URL, api_key=key, timeout=timeout
     )
     resp = client.chat.completions.create(
-        model=os.environ.get("NEMOTRON_MODEL", DEFAULT_MODEL),
+        model=os.environ.get("NEMOTRON_MODEL") or DEFAULT_MODEL,
         temperature=0,
         max_tokens=800,
         messages=[
@@ -53,7 +56,13 @@ def explain(metrics: dict, timeout: float = 60.0) -> dict:
             {"role": "user", "content": "Metrics (SYNTHETIC):\n" + json.dumps(metrics, indent=2)},
         ],
     )
-    return _extract_json(resp.choices[0].message.content or "")
+    raw = resp.choices[0].message.content or ""
+    return _extract_json(raw), raw
+
+
+def explain(metrics: dict, timeout: float = 60.0) -> dict:
+    """Ask Nemotron for a structured explanation. Raises on any failure (fail-closed)."""
+    return explain_with_raw(metrics, timeout)[0]
 
 
 def offline_explain(metrics: dict, tamper: bool = False) -> dict:

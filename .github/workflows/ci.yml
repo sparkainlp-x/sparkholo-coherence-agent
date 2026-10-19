@@ -28,7 +28,7 @@ jobs:
           cache-dependency-path: requirements.txt
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -r requirements.txt pytest
-      - name: Unit tests
-        run: python -m pytest -q tests/test_core.py
-      - name: Streamlit AppTest smoke test (load app, click button, tamper is refused)
+      - name: Unit tests (core, residual latch, pipeline and evidence record)
+        run: python -m pytest -q --ignore=tests/test_app_smoke.py
+      - name: Streamlit AppTest smoke test (load app, click button, tamper is refused, artifact latches)
         run: python -m pytest -q tests/test_app_smoke.py
