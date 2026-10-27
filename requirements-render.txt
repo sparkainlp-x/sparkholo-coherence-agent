@@ -1,0 +1,8 @@
+# Exact versions used for the Render deploy (Python 3.13.5). Tested: all 91 tests pass with this set on Python 3.13.
+# requirements.txt keeps ranges so CI can also run on Python 3.10-3.12.
+numpy==2.5.4
+scipy==1.18.1
+pandas==3.1.0
+plotly==7.1.0
+streamlit==1.66.1
+openai==3.39.0

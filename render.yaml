@@ -8,13 +8,13 @@ services:
     plan: free
     region: oregon
     branch: main
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements-render.txt
     startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true --browser.gatherUsageStats false
     healthCheckPath: /_stcore/health
     autoDeployTrigger: commit
     envVars:
       - key: PYTHON_VERSION
-        value: 3.13.5
+        value: "3.13.5"
       - key: NEBIUS_API_KEY  # secret: Render prompts for it on first Blueprint sync; never commit it
         sync: false
       - key: NEMOTRON_MODEL  # optional; default nvidia/nemotron-3-super-120b-a12b
