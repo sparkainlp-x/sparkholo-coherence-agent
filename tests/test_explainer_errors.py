@@ -90,3 +90,19 @@ def test_app_live_mode_with_mocked_api_verifies(monkeypatch):
     at.button[0].click().run()
     assert not at.exception
     assert any("All claims independently verified" in s.value for s in at.success)
+
+
+def test_missing_key_message_is_plain_and_key_free(monkeypatch):
+    monkeypatch.delenv("NEBIUS_API_KEY", raising=False)
+    res = run(RunConfig(), live=True, version="test")
+    assert "offline template" in res.error and "MissingKeyError" not in res.error
+
+
+def test_tamper_demo_appends_to_the_explainers_own_output():
+    """The tamper demo must modify what the explainer returned, not replace it with the offline template."""
+    marker = {"narrative": "Custom explainer text.", "claims": [{"type": "dominant_band", "session": "baseline",
+                                                                  "band": "alpha"}]}
+    res = run(RunConfig(tamper=True), explainer=lambda m: (marker, "RAW-FROM-EXPLAINER"), version="test")
+    assert res.status == "REFUSED"
+    assert res.explanation["narrative"].startswith("Custom explainer text.")
+    assert "RAW-FROM-EXPLAINER" in res.ai_raw_output and "tamper demo" in res.ai_raw_output

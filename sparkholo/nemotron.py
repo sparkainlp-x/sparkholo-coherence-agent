@@ -29,6 +29,10 @@ SYSTEM = (
 )
 
 
+class MissingKeyError(RuntimeError):
+    """Live mode was requested but NEBIUS_API_KEY is not set."""
+
+
 def _extract_json(text: str) -> dict:
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)  # reasoning traces
     start, end = text.find("{"), text.rfind("}")
@@ -43,7 +47,7 @@ def explain_with_raw(metrics: dict, timeout: float = 60.0) -> tuple[dict, str]:
 
     key = os.environ.get("NEBIUS_API_KEY")
     if not key:
-        raise RuntimeError("NEBIUS_API_KEY is not set")
+        raise MissingKeyError("NEBIUS_API_KEY is not set")
     client = OpenAI(
         base_url=os.environ.get("NEBIUS_BASE_URL") or DEFAULT_BASE_URL, api_key=key, timeout=timeout
     )
@@ -65,6 +69,9 @@ def describe_error(exc: BaseException) -> str:
 
     API error bodies are not echoed, because some providers include part of the key in them.
     """
+    if isinstance(exc, MissingKeyError):
+        return ("NEBIUS_API_KEY is not set, so Nemotron was not called. Set it as an environment variable "
+                "to use Nemotron; without it the app runs the labelled offline template instead.")
     try:
         import openai
     except ImportError:  # pragma: no cover - openai is a hard requirement
@@ -93,6 +100,18 @@ def describe_error(exc: BaseException) -> str:
 def explain(metrics: dict, timeout: float = 60.0) -> dict:
     """Ask Nemotron for a structured explanation. Raises on any failure (fail-closed)."""
     return explain_with_raw(metrics, timeout)[0]
+
+
+def inject_false_claim(exp: dict) -> dict:
+    """Return a copy of ``exp`` (from Nemotron or the offline template) with one false claim appended.
+
+    Used only by the tamper demo, so the verifier can be seen refusing it. The 90% theta claim is far from any
+    value the synthetic signals produce.
+    """
+    out = {"narrative": str(exp.get("narrative", "")) + " Theta power reaches 90.0% at follow-up.",
+           "claims": list(exp.get("claims", [])) + [
+               {"type": "relative_power", "session": "followup", "band": "theta", "value": 0.9}]}
+    return out
 
 
 def offline_explain(metrics: dict, tamper: bool = False) -> dict:
