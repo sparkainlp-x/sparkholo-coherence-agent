@@ -51,7 +51,7 @@ with c1:
     fig.add_scatter(x=prep.t[:n], y=prep.baseline[0, :n], name="baseline")
     fig.add_scatter(x=prep.t[:n], y=prep.followup[0, :n], name="follow-up")
     fig.update_layout(xaxis_title="seconds [SYNTHETIC]", yaxis_title="amplitude, a.u. [SYNTHETIC]", height=350)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 with c2:
     st.subheader("Residual-Latch: block scores S per channel")
     fig = go.Figure()
@@ -65,7 +65,7 @@ with c2:
     fig.add_hline(y=cfg.tau, line_dash="dash", annotation_text=f"tau {cfg.tau:.2f} [TARGET]")
     fig.update_layout(xaxis_title=f"follow-up block index (of {nb})", yaxis_title="S [SYNTHETIC]",
                       xaxis_range=[0, nb], yaxis_range=[0, max(1.0, (lat.max_S or 0) * 1.1)], height=350)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 st.markdown(
     f"Calibrator: reference = baseline 32-sample block template per channel; "
@@ -88,11 +88,11 @@ else:
     for s in ("baseline", "followup"):
         fig.add_bar(x=list(BANDS), y=[m[s]["relative_power"][b] for b in BANDS], name=s)
     fig.update_layout(yaxis_tickformat=".0%", yaxis_title="relative power [SYNTHETIC]", height=320, barmode="group")
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
     st.dataframe(pd.DataFrame({s: {**{f"{b} (rel)": fmt(v["relative_power"][b], S) for b in BANDS},
                                    "dominant band": v["dominant_band"],
                                    "alpha coherence": fmt(v["alpha_coherence"], S)} for s, v in m.items()}).astype(str),
-                 use_container_width=True)
+                 width="stretch")
 
 st.header("AI explanation, verified before display")
 st.caption(f"Verifier tolerances: relative power ±{fmt(REL_TOL, T, 2)}, coherence ±{fmt(COH_TOL, T, 2)}.")

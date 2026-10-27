@@ -118,9 +118,9 @@ def explain_and_verify(prep: Prepared, *, live: bool = False, explainer: Explain
     else:
         try:
             exp, raw = fn(prep.metrics)
-            if cfg.tamper:  # demo: a false claim is appended after the AI step
-                exp = nemotron.offline_explain(prep.metrics, tamper=True)
-                raw = json.dumps(exp, sort_keys=True)
+            if cfg.tamper:  # demo: one false claim is appended to whatever the explainer returned
+                exp = nemotron.inject_false_claim(exp)
+                raw = raw + "\n[tamper demo: false claim appended after the AI step]\n" + json.dumps(exp, sort_keys=True)
         except Exception as exc:  # noqa: BLE001 - fail closed: nothing is displayed
             res = RunResult(prep, "EXPLAINER_ERROR", True, mode, error=nemotron.describe_error(exc))
         else:

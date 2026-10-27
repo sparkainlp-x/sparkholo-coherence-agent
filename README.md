@@ -15,7 +15,7 @@ Accountable AI explanations for **synthetic** holographic and neural-coherence r
 
 **Evidence tags.** Every number in the UI and in the record carries a tag: `SYNTHETIC` (computed from seeded synthetic signals: all metrics, R and S), `TARGET` (configured thresholds and tolerances: τ, margin, block size, weights, verifier tolerances), `REPORTED` (measured on real data: none in this app), `UNRUN` (not run).
 
-**What the latch means.** It is a data-integrity stop bit: the follow-up left the envelope calibrated on the baseline. It is not a measure of any person or brain state. With the default controls the run is clean (max S 0.29, SYNTHETIC); the injected spike, drift and dropout latch. Extreme settings (noise 0, or both follow-up gains near 3) can also latch clean synthetic data, which is the intended fail-closed behaviour.
+**What the latch means.** It is a data-integrity stop bit: the follow-up left the envelope calibrated on the baseline. It is not a measure of any person or brain state. With the default controls the run is clean (max S 0.29, SYNTHETIC); the injected spike, drift and dropout latch. Extreme settings can also latch clean synthetic data, which is the intended fail-closed behaviour; whether they do depends on the seed (checked: noise 0 latches at seed 1 but not at seed 42, max S 0.495; both follow-up gains at 3.0 latch at seed 42, max S 0.525, but not at seed 1 or 21).
 
 ## Setup
 ```bash
@@ -33,7 +33,9 @@ export NEBIUS_API_KEY=...            # from Nebius Token Factory; never commit i
 #   (the region where the Token Factory catalog lists Nemotron 3 Super; EU models use https://api.tokenfactory.nebius.com/v1/)
 streamlit run app.py
 ```
-Without `NEBIUS_API_KEY`, the app runs a clearly labelled **offline template** explainer so it still demos end to end.
+Without `NEBIUS_API_KEY`, the app runs a clearly labelled **offline template** explainer (sidebar: "OFFLINE template (no API key set)") so it still demos end to end. The template's output goes through the same verifier; no Nemotron call is made and none is claimed. Live Nemotron output is only produced when the key is set.
+
+The **tamper demo** appends one false claim (theta 90%) to whatever the explainer returned (Nemotron output when the key is set, the template otherwise) and shows the verifier refusing it.
 
 ## Nebius Token Factory and Nemotron
 - Token Factory exposes an OpenAI-compatible API, so the client is the standard `openai` package with `base_url` set.
@@ -42,9 +44,9 @@ Without `NEBIUS_API_KEY`, the app runs a clearly labelled **offline template** e
 
 ## Tests
 ```bash
-pip install pytest && pytest -q
+pip install pytest && python -m pytest -q   # plain `pytest -q` also works (pytest.ini sets the path)
 ```
-89 tests, offline, no API key: signal determinism and band maths; verifier refusal of tampered, unbacked, malformed and clinically worded explanations; the residual latch (clean passes, spike and drift latch, NaN/inf/wrong shape/bad baseline latch, the S formula); the pipeline (a latched run never calls the explainer, checked with a mock, in offline and live mode); evidence tags on every number in the record; deterministic manifest hashes and tamper detection by `verify_manifest`; explainer failures (missing key, HTTP 429 rate limit, rejected key, timeout) fail closed with a clear message that never contains the key; and Streamlit `AppTest` smoke tests (app loads, a rate-limited live call shows a message instead of crashing, button verifies, tamper checkbox yields **Explanation REFUSED**, each injected artifact yields **LATCHED: AI not consulted**). GitHub Actions runs them on Python 3.10–3.13.
+91 tests, offline, no API key: signal determinism and band maths; verifier refusal of tampered, unbacked, malformed and clinically worded explanations; the residual latch (clean passes, spike and drift latch, NaN/inf/wrong shape/bad baseline latch, the S formula); the pipeline (a latched run never calls the explainer, checked with a mock, in offline and live mode); evidence tags on every number in the record; deterministic manifest hashes and tamper detection by `verify_manifest`; explainer failures (missing key, HTTP 429 rate limit, rejected key, timeout) fail closed with a clear message that never contains the key; and Streamlit `AppTest` smoke tests (app loads, a rate-limited live call shows a message instead of crashing, button verifies, tamper checkbox yields **Explanation REFUSED**, each injected artifact yields **LATCHED: AI not consulted**). GitHub Actions runs them on Python 3.10–3.13.
 
 ## Deploy (Render)
 `render.yaml` is a Render Blueprint for one free web service. In Render choose **New > Blueprint**, pick this repo, and enter `NEBIUS_API_KEY` when prompted (leave `NEMOTRON_MODEL` and `NEBIUS_BASE_URL` empty to use the defaults). The same settings for a manual **New > Web Service**:
