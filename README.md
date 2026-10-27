@@ -54,7 +54,7 @@ pip install pytest && python -m pytest -q   # plain `pytest -q` also works (pyte
 | Setting | Value |
 |---|---|
 | Runtime | Python 3 (`PYTHON_VERSION=3.13.5`) |
-| Build command | `pip install -r requirements.txt` |
+| Build command | `pip install -r requirements-render.txt` (exact versions; `requirements.txt` keeps ranges for CI) |
 | Start command | `streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true --browser.gatherUsageStats false` |
 | Health check path | `/_stcore/health` |
 | Secret env var | `NEBIUS_API_KEY` |
