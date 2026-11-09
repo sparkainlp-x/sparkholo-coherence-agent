@@ -3,4 +3,4 @@ scipy>=1.13,<2
 pandas>=2.1,<4
 plotly>=5.18,<8
 streamlit>=1.50,<2
-openai>=1.40,<4
+openai>=3.46.0,<4
